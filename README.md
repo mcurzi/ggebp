@@ -29,7 +29,3 @@ source("ggebp.R")
 ### Legacy Status
 
 This code is provided "as-is" from my 2015 archives. It was written in Base R, before the Tidyverse became the standard for data manipulation. It reflects my early approach to solving complex problems using R's core functional programming capabilities.
-
-Author: **Matias J. Curzi**
-
-Initial Release: Jan 2015 | Version: 1.3 (March 2015)
