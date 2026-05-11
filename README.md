@@ -1,12 +1,12 @@
 
 # ggebp: GGE Biplots with Mosaic Plots in R
 
-This repository contains a standalone R function (`ggebp.R`) developed to perform Singular Value Decomposition (SVD) and construct GGE-biplots using `ggplot2`.
+This repository contains a standalone R function (`ggebp.r`) developed to perform Singular Value Decomposition (SVD) and construct GGE-biplots using `ggplot2`.
 
 ### The Context
 I developed this tool back in 2015 to implement the advanced GxE analysis techniques described by Laffont, Hanafi, and Wright. The function integrates numerical and graphical measures from their 2007 work (Crop Science 47:990-996) and the specific GGEBP methodology from their 2013 paper (Crop Science 53:2332-2341).
 
-I’m sharing this for anyone interested in implementing statistical theory into functional and practical code.
+I’m sharing this for anyone interested, it’s still fully functional in 2026. 
 
 ### Technical Highlights
 Unlike standard "black-box" packages, this implementation was built from the ground up to provide transparency in the GxE (Genotype by Environment) analysis:
@@ -19,10 +19,18 @@ Unlike standard "black-box" packages, this implementation was built from the gro
 ### Usage
 The function is designed to be user-friendly, even offering a file selection window if no data is provided.
 ```r
-source("ggebp.R")
+source("ggebp.r")
 
-# Example:
-# ggebp(my_data, mat = TRUE, mosaic = TRUE, title = "Yield Trials")
+# Yang barley dataset included in the repo, also available in 'agridat' package
+yb <- read.csv("yang_barley.csv")
+
+# Basic plot
+ggebp(yb, title = "Example basic Biplot")
+
+# Change some plot parameters, includes SS partition (mosaic plot)
+ggebp(yb, mosaic = T, obs.labels = T,
+    var.factor = 2, var.color="multi", line.width = 1, 
+    title = "Example improved Biplot + SSP Mosaic Plot")
 
 ```
 
