@@ -1,26 +1,26 @@
 # 
 # ggebp.r
 #
-# Matias J. Curzi
+# Matias J. Curzi - 2015
 #
-# v1.3: 03/13/2015
+# v1.31
 #
 # Performs the singular value decomposition (SVD) of a GxE matrix and constructs a GGE-biplot using the package ggplot2.
 #
 # The input for this function is a data frame of multi-environment trial (MET) data, in which genotypes
 # are presented as rows and environments are presented as columns in a data matrix. The first column
-# must be labeled 'Entry' and contain the genotype names. If the argument 'data' is not specified,
+# must be labeled 'gen' and contain the genotype names. If the argument 'data' is not specified,
 # a file selection window will appear that allows to choose a .csv file.
 # 
 # It is important to notice that this function does not admit missing values. If the dataset is unbalanced, rows
 # or columns with missing data must be either removed or balanced using an appropriate imputation method.
 #
 # Alternatively, a dataset containing two factors and a response variable can be processed by this function.
-# In this case, a column called 'Entry' must contain the genotype names, a second column called 'Env' must contain
-# the environment names, and a third column called 'Yield' must have the response variable (Note: all possible 
-# Entry x Env combinations must have a value). To use this input format, the argument 'mat' should be set to FALSE.
+# In this case, a column called 'gen' must contain the genotype names, a second column called 'env' must contain
+# the environment names, and a third column called 'yield' must have the response variable (Note: all possible 
+# gen x env combinations must have a value). To use this input format, the argument 'mat' should be set to FALSE.
 #
-# An optional column called 'Group' is admitted to specify group names for the entries. This column is used
+# An optional column called 'group' is admitted to specify group names for the entries. This column is used
 # to identify genotype groups by color in the biplot. In order to use this feature, the argument 'groups' must
 # be set to TRUE.
 #
@@ -29,17 +29,17 @@ ggebp <- function (data = NULL,  # A data frame object with MET data. If nothing
          env.cent = TRUE,        # Environment-centered biplot. Change to FALSE to scale variables (for an environment-standardized biplot).
          comps = c(1,2),         # Principal components to plot (PC1 and PC2 by default).
          output = NULL,          # If a name is specified between quotes, four .csv files will be created in the working directory.
-         mat = TRUE,             # TRUE expects a data frame with entries in rows and environments in columns. FALSE expects a df with 3 columns: Entry, Env and Yield.
+         mat = FALSE,             # TRUE expects a data frame with entries in rows and environments in columns. FALSE expects a df with 3 columns: gen, env and yield.
          mosaic = FALSE,         # Creates a mosaic plot showing the sum of squares partition in a new graphics device.
-         groups = FALSE,         # If there are genotype groups, change to TRUE to identify them by color (an additional 'Group' column is required in the data set).
+         groups = FALSE,         # If there are genotype groups, change to TRUE to identify them by color (an additional 'group' column is required in the data set).
          title = "GGE-Biplot",   # Change biplot title (specify new title between quotes).
-         obs.labels = FALSE,     # Change to TRUE to show observation (Entry) labels.
+         obs.labels = FALSE,     # Change to TRUE to show observation (gen) labels.
          var.labels = TRUE,      # Change to FALSE to hide variable (Environment) labels.
          angle = FALSE,          # Change to TRUE to assign environment labels the same angle as their vectors.
-         obs.color = "black",    # Change fill color of entry symbols. Use "multi" to automatically set one color for each entry (ignored if groups = TRUE).
+         obs.color = "black",    # Change fill color of genotype symbols. Use "multi" to automatically set one color for each genotype (ignored if groups = TRUE).
          var.color = "red4",     # Change line color of environment vectors. Use "multi" to automatically set one color for each environment.
          line.width = 0.5,       # Environment vector line width.
-         obsname.size = 2.5,     # Entry labels text size.
+         obsname.size = 2.5,     # Genotype labels text size.
          varname.size = 2.5,     # Environment labels text size.
          obs.factor = 1,         # Adjusts the observation coordinates to improve the plot appearance.
          var.factor = 1,         # Adjusts the variable coordinates to improve the plot appearance.
@@ -57,7 +57,7 @@ ggebp <- function (data = NULL,  # A data frame object with MET data. If nothing
 
     if(!mat) { 
         # Creates a list of dFrames containing entries and yields, one for each environment.
-        datalist <- split(data[,c("Entry","Yield")], data$Env)
+        datalist <- split(data[,c("gen","yield")], data$env)
 
         # Saves the first element of the list in a data frame called 'dFrame'.
         names(datalist[[1]])[2] <- names(datalist)[[1]]
@@ -70,16 +70,16 @@ ggebp <- function (data = NULL,  # A data frame object with MET data. If nothing
             dFrame <- cbind(dFrame, datalist[[i]][2])
         }
     } else {
-        if("Group" %in% colnames(data)) {
-	    dFrame <- subset(data, select = -Group)
+        if("group" %in% colnames(data)) {
+	    dFrame <- subset(data, select = -group)
         } else {
             dFrame <- data
         }
     }
 
-    # Uses the Entry column as rownames and converts the data frame into a matrix.
-    rownames(dFrame) <- dFrame$Entry
-    dFrame <- as.matrix(subset(dFrame, select = -Entry ))
+    # Uses the gen column as rownames and converts the data frame into a matrix.
+    rownames(dFrame) <- dFrame$gen
+    dFrame <- as.matrix(subset(dFrame, select = -gen ))
 
     # Environment-centered biplot vs. Environment-standardized biplot
     if(env.cent) {
@@ -163,7 +163,7 @@ ggebp <- function (data = NULL,  # A data frame object with MET data. If nothing
   
   # Creates a grouping variable if required, used to identify genotype groups by color:
     if(groups) {
-        obsCoords$group <- data$Group[match(obsCoords$obsname, data$Entry)]
+        obsCoords$group <- data$group[match(obsCoords$obsname, data$gen)]
     }
 
   # Variables for text label placement and angle calculation:
@@ -187,11 +187,11 @@ ggebp <- function (data = NULL,  # A data frame object with MET data. If nothing
         ggtitle(title) + theme(plot.title = element_text(vjust= 1)) 
 
     if(groups) {
-        g <- g + geom_point(data = obsCoords, aes(x = coordX, y = coordY, label = obsname, fill = group), colour="black", shape=21)
+        g <- g + geom_point(data = obsCoords, aes(x = coordX, y = coordY, fill = group), colour="black", shape=21)
     } else if (obs.color=="multi"){
-        g <- g + geom_point(data = obsCoords, aes(x = coordX, y = coordY, label = obsname, fill = obsname), colour="black", shape=21)
+        g <- g + geom_point(data = obsCoords, aes(x = coordX, y = coordY, fill = obsname), colour="black", shape=21)
     }else {
-        g <- g + geom_point(data = obsCoords, aes(x = coordX, y = coordY, label = obsname), fill = obs.color, colour="black", shape=21)
+        g <- g + geom_point(data = obsCoords, aes(x = coordX, y = coordY), fill = obs.color, colour="black", shape=21)
     }
 
     # Observation labels:
@@ -207,10 +207,10 @@ ggebp <- function (data = NULL,  # A data frame object with MET data. If nothing
 
     # Vectors (variables):
     if(var.color=="multi") {
-        g <- g + geom_segment(data = varCoords, aes(x = 0, y = 0, xend = coordX, yend = coordY, colour = varname), size = line.width) +
+        g <- g + geom_segment(data = varCoords, aes(x = 0, y = 0, xend = coordX, yend = coordY, colour = varname), linewidth = line.width) +
              geom_point(data = varCoords, aes(x = coordX, y = coordY, colour = varname), size = 1.5)
     } else {
-        g <- g + geom_segment(data = varCoords, aes(x = 0, y = 0, xend = coordX, yend = coordY), colour = var.color, size = line.width) +
+        g <- g + geom_segment(data = varCoords, aes(x = 0, y = 0, xend = coordX, yend = coordY), colour = var.color, linewidth = line.width) +
              geom_point(data = varCoords, aes(x = coordX, y = coordY), colour = var.color, size = 1.5)   
     }
  
@@ -232,7 +232,7 @@ ggebp <- function (data = NULL,  # A data frame object with MET data. If nothing
         }
     }
 
-    g <- g + scale_fill_discrete(name="Group") + scale_colour_discrete(guide=FALSE)
+    g <- g + scale_fill_discrete(name="group") + scale_colour_discrete(guide="none")
 
     if(sameLimits) {
       llim <- min(varCoords$coordX, obsCoords$coordX, varCoords$coordY, obsCoords$coordY)
